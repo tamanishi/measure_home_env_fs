@@ -1,0 +1,8 @@
+[package]
+name = "measure_home_env_fs"
+version = "0.1.0"
+authors = ["Masayuki Sunahara <tamanishi@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+bme280 = "0.1.1"
