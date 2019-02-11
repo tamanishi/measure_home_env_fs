@@ -6,6 +6,7 @@ extern crate linux_embedded_hal as hal;
 extern crate yup_oauth2 as oauth2;
 
 use bme280::BME280;
+use chrono::Local;
 use firestore1_beta1::Document;
 use firestore1_beta1::Error;
 use firestore1_beta1::Firestore;
@@ -16,12 +17,12 @@ use hyper_native_tls::NativeTlsClient;
 use std::collections::HashMap;
 use std::default::Default;
 use yup_oauth2::GetToken;
-use chrono::Local;
 
 const BME280_DEVICE: &str = "/dev/i2c-1";
 const FS_CREDENTIAL_FILE: &str = "home-env-firebase-adminsdk.json";
 const FS_API_SCOPE_DATASTORE: &str = "https://www.googleapis.com/auth/datastore";
 const FS_DOCUMENT_PATH: &str = "projects/home-env/databases/(default)/documents";
+const FS_COLLECTION_NAME: &str = "measurements";
 
 struct MeasurementDoc {
     datetime: Value,
@@ -42,7 +43,7 @@ impl MeasurementDoc {
         val
     }
     pub fn new(datetime: String, temperature: f32, humidity: f32, pressure: f32) -> MeasurementDoc {
-       MeasurementDoc {
+        MeasurementDoc {
             datetime: MeasurementDoc::to_string_value(datetime),
             temperature: MeasurementDoc::to_double_value(temperature),
             humidity: MeasurementDoc::to_double_value(humidity),
@@ -72,7 +73,12 @@ fn main() {
     let now_str = now.clone().format("%Y/%m/%d %H:%M:%S").to_string();
     let now_id = now.clone().format("%Y%m%d%H%M%S").to_string();
 
-    let measurement_doc = MeasurementDoc::new(now_str, measurements.temperature, measurements.humidity, measurements.pressure);
+    let measurement_doc = MeasurementDoc::new(
+        now_str,
+        measurements.temperature,
+        measurements.humidity,
+        measurements.pressure,
+    );
 
     let exe_file_path = std::env::current_exe().unwrap();
     let exe_dir_path = exe_file_path.parent().unwrap();
@@ -85,10 +91,7 @@ fn main() {
         hyper::Client::with_connector(HttpsConnector::new(NativeTlsClient::new().unwrap()));
     let mut access = oauth2::ServiceAccountAccess::new(client_secret, client);
 
-    access
-        // .token(&vec![FS_API_SCOPE_PLATFORM, FS_API_SCOPE_DATASTORE])
-        .token(&vec![FS_API_SCOPE_DATASTORE])
-        .unwrap();
+    access.token(&vec![FS_API_SCOPE_DATASTORE]).unwrap();
 
     let client =
         hyper::Client::with_connector(HttpsConnector::new(NativeTlsClient::new().unwrap()));
@@ -101,7 +104,7 @@ fn main() {
 
     let result = hub
         .projects()
-        .databases_documents_create_document(req, FS_DOCUMENT_PATH, "users")
+        .databases_documents_create_document(req, FS_DOCUMENT_PATH, FS_COLLECTION_NAME)
         .document_id(&now_id)
         .doit();
 
