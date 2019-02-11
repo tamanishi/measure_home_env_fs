@@ -20,7 +20,6 @@ use chrono::Local;
 
 const BME280_DEVICE: &str = "/dev/i2c-1";
 const FS_CREDENTIAL_FILE: &str = "home-env-firebase-adminsdk.json";
-// const FS_API_SCOPE_PLATFORM: &str = "https://www.googleapis.com/auth/cloud-platform";
 const FS_API_SCOPE_DATASTORE: &str = "https://www.googleapis.com/auth/datastore";
 const FS_DOCUMENT_PATH: &str = "projects/home-env/databases/(default)/documents";
 
@@ -60,10 +59,6 @@ impl MeasurementDoc {
     }
 }
 
-// fn create_document() -> Document {
-//    Document::default()
-// }
-
 fn main() {
     let i2c_bus = I2cdev::new(BME280_DEVICE).unwrap();
 
@@ -73,14 +68,9 @@ fn main() {
 
     let measurements = bme280.measure().unwrap();
 
-//    println!("Relative Humidity = {} %", measurements.humidity);
-//    println!("Temperature = {} deg C", measurements.temperature);
-//    println!("Pressure = {} hecto pascals", measurements.pressure / 100.0);
-
     let now = Local::now();
     let now_str = now.clone().format("%Y/%m/%d %H:%M:%S").to_string();
     let now_id = now.clone().format("%Y%m%d%H%M%S").to_string();
-//    println!("{}", now);
 
     let measurement_doc = MeasurementDoc::new(now_str, measurements.temperature, measurements.humidity, measurements.pressure);
 
@@ -105,9 +95,6 @@ fn main() {
     let hub = Firestore::new(client, access);
 
     let map = MeasurementDoc::to_hashmap(measurement_doc);
-//    map.insert("temperature".to_string(), measurement_doc.temperature);
-//    map.insert("humidity".to_string(), measurement_doc.humidity);
-//    map.insert("pressure".to_string(), measurement_doc.pressure);
 
     let mut req = Document::default();
     req.fields = Some(map);
@@ -130,7 +117,6 @@ fn main() {
             | Error::FieldClash(_)
             | Error::JsonDecodeError(_, _) => println!("{}", e),
         },
-        // Ok(res) => println!("Success: {:?}", res),
         Ok(_) => {}
     }
 }
