@@ -4,6 +4,7 @@ extern crate hyper;
 extern crate hyper_native_tls;
 extern crate linux_embedded_hal as hal;
 extern crate yup_oauth2 as oauth2;
+extern crate clap;
 
 use bme280::BME280;
 use chrono::Local;
@@ -17,6 +18,8 @@ use hyper_native_tls::NativeTlsClient;
 use std::collections::HashMap;
 use std::default::Default;
 use yup_oauth2::GetToken;
+use clap::{App, Arg};
+use std::fmt;
 
 const BME280_DEVICE: &str = "/dev/i2c-1";
 const FS_CREDENTIAL_FILE: &str = "home-env-firebase-adminsdk.json";
@@ -60,7 +63,25 @@ impl MeasurementDoc {
     }
 }
 
+impl fmt::Display for MeasurementDoc {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "\"t\": {:.1}, \"h\": {:.1}, \"p\": {:.0}", self.temperature.double_value.unwrap(), self.humidity.double_value.unwrap(), self.pressure.double_value.unwrap())
+    }
+}
+
 fn main() {
+    let app = App::new("measure_home_env_fs")
+        .version("0.2.0")
+        .author("Masayuki Sunahara <tamanishi.gmail.com>")
+        .about("measures home temperature, humidity, and pressure. ")
+        .arg(Arg::with_name("dryrun")
+            .help("Shows on console only")
+            .long("dryrun")
+            .short("d")
+    );
+
+    let matches = app.get_matches();
+
     let i2c_bus = I2cdev::new(BME280_DEVICE).unwrap();
 
     let mut bme280 = BME280::new_primary(i2c_bus, Delay);
@@ -80,6 +101,12 @@ fn main() {
         measurements.pressure,
     );
 
+    if matches.is_present("dryrun") {
+//        println!("dryrun!!");
+        println!("{{{}}}", measurement_doc);
+        return;
+    }
+ 
     let exe_file_path = std::env::current_exe().unwrap();
     let exe_dir_path = exe_file_path.parent().unwrap();
     let client_secret = oauth2::service_account_key_from_file(
