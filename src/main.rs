@@ -17,6 +17,7 @@ use hyper::net::HttpsConnector;
 use hyper_native_tls::NativeTlsClient;
 use std::collections::HashMap;
 use std::default::Default;
+use std::path::Path;
 use yup_oauth2::GetToken;
 use clap::{App, Arg};
 use std::fmt;
@@ -65,7 +66,7 @@ impl MeasurementDoc {
 
 impl fmt::Display for MeasurementDoc {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "\"t\": {:.1}, \"h\": {:.1}, \"p\": {:.0}", self.temperature.double_value.unwrap(), self.humidity.double_value.unwrap(), self.pressure.double_value.unwrap())
+        write!(f,"\"ti\": {:?}, \"te\": {:.1}, \"h\": {:.1}, \"p\": {:.0}", self.datetime.string_value.as_ref().unwrap(), self.temperature.double_value.unwrap(), self.humidity.double_value.unwrap(), self.pressure.double_value.unwrap())
     }
 }
 
@@ -109,8 +110,14 @@ fn main() {
  
     let exe_file_path = std::env::current_exe().unwrap();
     let exe_dir_path = exe_file_path.parent().unwrap();
+    let cred_dir_path = match Path::new("/.dockerenv").exists() {
+        true => "/cred",
+        false => {
+            exe_dir_path.to_str().unwrap()
+        },
+    };
     let client_secret = oauth2::service_account_key_from_file(
-        &format!("{}/{}", exe_dir_path.to_str().unwrap(), FS_CREDENTIAL_FILE).to_string(),
+        &format!("{}/{}", cred_dir_path, FS_CREDENTIAL_FILE).to_string(),
     )
     .unwrap();
 
