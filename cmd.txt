@@ -1,0 +1,6 @@
+docker build -t tamanishi/measure_home_env_fs:build --target build-stage --cache-from tamanishi/measure_home_env_fs:build --build-arg BUILDKIT_INLINE_CACHE=1 .
+docker login
+docker push tamanishi/measure_home_env_fs:build
+docker build -t tamanishi/measure_home_env_fs:runtime --cache-from tamanishi/measure_home_env_fs:build --build-arg BUILDKIT_INLINE_CACHE=1 .
+docker run --rm --mount type=bind,src=/home/pi/src/docker_rust_test/cred,dst=/cred,readonly --device=/dev/i2c-1 tamanishi/measure_home_env_fs:runtime measure_home_env_fs
+
