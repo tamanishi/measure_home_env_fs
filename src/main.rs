@@ -66,7 +66,7 @@ impl MeasurementDoc {
 
 impl fmt::Display for MeasurementDoc {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f,"\"ti\": {:?}, \"te\": {:.1}, \"h\": {:.1}, \"p\": {:.0}", self.datetime.string_value.as_ref().unwrap(), self.temperature.double_value.unwrap(), self.humidity.double_value.unwrap(), self.pressure.double_value.unwrap())
+        write!(f,"\"datetime\": {:?}, \"temperature\": {:.1}, \"humidity\": {:.1}, \"pressure\": {:.0}", self.datetime.string_value.as_ref().unwrap(), self.temperature.double_value.unwrap(), self.humidity.double_value.unwrap(), self.pressure.double_value.unwrap())
     }
 }
 
